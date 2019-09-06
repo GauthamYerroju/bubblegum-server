@@ -1,0 +1,15 @@
+{
+    "fs": {
+        "defaultDir": "test_media",
+        "recurse": false,
+        "thumbnailDir": "thumbnails"
+    },
+    "image": {
+        "shrinkOnly": true
+    },
+    "statKeys": {
+        "size": "size",
+        "mtime": "mtimeMs",
+        "ctime": "ctimeMs"
+    }
+}
