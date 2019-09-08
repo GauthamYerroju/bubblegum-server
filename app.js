@@ -22,6 +22,8 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(helmet())
 
+// TODO: ETag based on modigied time/hash for files
+
 app.use('/', indexRouter);
 
 // catch 404 and forward to error handler

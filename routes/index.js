@@ -43,13 +43,9 @@ router.get('/get-thumbnail', function(req, res, next) {
   return res.sendFile(p)
 });
 
-router.get(['/listdir', '/search'], function (req, res, next) {
-  // TODO: Different router method for search
-  var pre = (req.url.indexOf('/search') >= 0) ? argv.home : argv.home
-  var p = path.resolve(pre, req.query.path || '')
+router.get(['/listdir'], function (req, res, next) {
   var promises = []
-  for (const i of iterDir(p, recurse=false)) {
-    i.isDir = i.dir
+  for (const i of iterDir(path.resolve(argv.home, req.query.path || ''), recurse=false)) {
     i.useSrc = true
     i.mtime = i.mtime / 1000
     i.ctime = i.ctime / 1000
@@ -79,6 +75,23 @@ router.get(['/listdir', '/search'], function (req, res, next) {
     // console.table(values)
     return res.json(values)
   })
+});
+
+router.get(['/search'], function (req, res, next) {
+  const searchTerm = req.query.q || ''
+  for(const letter of searchTerm.split('')) {
+    
+  }
+  const result = searchTerm.split('').map(x => ({
+    name: x,
+    path: path.resolve(argv.home, x),
+    dir: false,
+    size: 0,
+    mtime: 1564209108.6080341,
+    ctime: 1564209108.6080341,
+    useSrc: true
+  }))
+  return res.json(result)
 });
 
 module.exports = router;
