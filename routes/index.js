@@ -15,8 +15,7 @@ var argSpec = {
     default: process.cwd()
   },
   2: {
-    name: 'thumbs',
-    default: process.cwd()
+    name: 'thumbs'
   }
 }
 var argv = {}
@@ -25,6 +24,9 @@ for(var [i, arg] of process.argv.slice(2).entries()) {
   if (spec) {
     argv[spec.name] = arg || spec.default
   }
+}
+if (argv.home && !argv.thumbs) {
+  argv.thumbs = argv.home
 }
 console.table(argv)
 
@@ -46,7 +48,7 @@ router.get('/get-thumbnail', function(req, res, next) {
 router.get(['/listdir'], function (req, res, next) {
   var promises = []
   for (const i of iterDir(path.resolve(argv.home, req.query.path || ''), recurse=false)) {
-    i.useSrc = true
+    i.thumb = i.path // MOD
     i.mtime = i.mtime / 1000
     i.ctime = i.ctime / 1000
     if (i.dir) {
@@ -57,11 +59,8 @@ router.get(['/listdir'], function (req, res, next) {
       promises.push(new Promise((resolve, reject) => {
         Media.inspect(i.path)
         .then(info => {
-          console.log(info)
-          i.meta = info
           i.width = info.width
           i.height = info.height
-          // i.isPortrait = i.height > i.width
           resolve(i)
         }).catch(err => {
           console.error(err)
