@@ -3,7 +3,7 @@ var process = require('process')
 var express = require('express');
 var router = express.Router();
 var mime = require('mime-types')
-var { iterDir, Media } = require("bubblegum-core")
+var { iterDir, getFileData } = require("bubblegum-core")
 
 // TODO: why do I need config/default.json? Figure it out.
 // TODO: define settings in bubblegum-core, expose it in bubblegum-server and bubblegum-gallery
@@ -48,29 +48,14 @@ router.get('/get-thumbnail', function(req, res, next) {
 router.get(['/listdir'], function (req, res, next) {
   var promises = []
   for (const i of iterDir(path.resolve(argv.home, req.query.path || ''), recurse=false)) {
-    i.thumb = i.path // MOD
-    i.mtime = i.mtime / 1000 // TODO: Why am I doing this again?
-    i.ctime = i.ctime / 1000
     if (i.dir) {
       promises.push(i)
     } else {
       i.mime = mime.lookup(i.path)
-      promises.push(new Promise((resolve, reject) => {
-        Media.inspect(i.path)
-        .then(info => {
-          i.width = info.width
-          i.height = info.height
-          resolve(i)
-        }).catch(err => {
-          console.error(err)
-          i.error = err
-          resolve(i)
-        })
-      }))
+      promises.push(getFileData(i))
     }
   }
   Promise.all(promises).catch(res.json).then(values => {
-    // console.table(values)
     return res.json(values)
   })
 });
