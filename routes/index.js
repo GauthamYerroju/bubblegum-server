@@ -49,12 +49,11 @@ router.get(['/listdir'], function (req, res, next) {
   var promises = []
   for (const i of iterDir(path.resolve(argv.home, req.query.path || ''), recurse=false)) {
     i.thumb = i.path // MOD
-    i.mtime = i.mtime / 1000
+    i.mtime = i.mtime / 1000 // TODO: Why am I doing this again?
     i.ctime = i.ctime / 1000
     if (i.dir) {
       promises.push(i)
     } else {
-      i.ext = path.extname(i.path)
       i.mime = mime.lookup(i.path)
       promises.push(new Promise((resolve, reject) => {
         Media.inspect(i.path)
