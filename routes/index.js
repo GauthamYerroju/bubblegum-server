@@ -78,7 +78,28 @@ router.get('/search', function (req, res, next) {
   res.json(rows)
 });
 
-
+router.get('/scan', function (req, res, next) {
+  if (!req.query.path) {
+    return res.status(400).json({message: 'Invalid path.'})
+  }
+  var promises = []
+  for (const i of iterDir(path.resolve(req.query.path), recurse=true)) {
+    if (i.dir) continue;
+    promises.push(new Promise((resolve, reject) => {
+      getFileData(i)
+      .then(data => {
+        console.log('Indexed:', i.path)
+        resolve(i)
+      })
+      .catch(err => {
+        console.log(err)
+        resolve('Error:', err)
+      })
+    }))
+  }
+  Promise.all(promises).catch(err => res.status(500).json(err)).then(values => {
+    return res.json({message: `Indexed ${values.length} item(s).`})
+  })
 });
 
 module.exports = router;
