@@ -3,7 +3,7 @@ var process = require('process')
 var express = require('express');
 var router = express.Router();
 var mime = require('mime-types')
-var { iterDir, getFileData } = require("bubblegum-core")
+var { iterDir, getFileData, searchDb } = require("bubblegum-core")
 
 // TODO: why do I need config/default.json? Figure it out.
 // TODO: define settings in bubblegum-core, expose it in bubblegum-server and bubblegum-gallery
@@ -45,7 +45,7 @@ router.get('/get-thumbnail', function(req, res, next) {
   return res.sendFile(p)
 });
 
-router.get(['/listdir'], function (req, res, next) {
+router.get('/listdir', function (req, res, next) {
   var promises = []
   for (const i of iterDir(path.resolve(argv.home, req.query.path || ''), recurse=false)) {
     if (i.dir) {
@@ -67,21 +67,18 @@ router.get(['/listdir'], function (req, res, next) {
   })
 });
 
-router.get(['/search'], function (req, res, next) {
-  const searchTerm = req.query.q || ''
-  for(const letter of searchTerm.split('')) {
-    
-  }
-  const result = searchTerm.split('').map(x => ({
-    name: x,
-    path: path.resolve(argv.home, x),
-    dir: false,
-    size: 0,
-    mtime: 1564209108.6080341,
-    ctime: 1564209108.6080341,
-    useSrc: true
-  }))
-  return res.json(result)
+router.get('/search', function (req, res, next) {
+  const q = req.query.q || ''
+  const orderBy = req.query.sortBy || 'name'
+  const desc = !(req.query.sortAsc === 'true')
+  const limit = req.query.limit || 80
+  const offset = req.query.offset || 0
+  // TODO: move limit and offset defaults to UI, server shouldn't need these.
+  const rows = searchDb(q, orderBy, desc, limit, offset)
+  res.json(rows)
+});
+
+
 });
 
 module.exports = router;
