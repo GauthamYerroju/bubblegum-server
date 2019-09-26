@@ -79,21 +79,16 @@ router.get('/search', function (req, res, next) {
 });
 
 router.get('/scan', function (req, res, next) {
-  if (!req.query.path) {
-    return res.status(400).json({message: 'Invalid path.'})
-  }
   var promises = []
-  for (const i of iterDir(path.resolve(req.query.path), recurse=true)) {
+  for (const i of iterDir(path.resolve(argv.home), recurse=true)) {
     if (i.dir) continue;
     promises.push(new Promise((resolve, reject) => {
-      getFileData(i)
+      getFileData(i, true)
       .then(data => {
-        console.log('Indexed:', i.path)
-        resolve(i)
+        resolve(data)
       })
       .catch(err => {
-        console.log(err)
-        resolve('Error:', err)
+        resolve(err)
       })
     }))
   }
