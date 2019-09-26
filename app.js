@@ -33,6 +33,9 @@ app.use(function(req, res, next) {
 
 // error handler
 app.use(function(err, req, res, next) {
+  if (err) {
+    console.error(err)
+  }
   // TODO: detect if api or page, then choose res.render or res.json
   if (false) {
     res.status(err.status || 500).json({
