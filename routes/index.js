@@ -71,9 +71,8 @@ router.get('/search', function (req, res, next) {
   const q = req.query.q || ''
   const orderBy = req.query.sortBy || 'name'
   const desc = !(req.query.sortAsc === 'true')
-  const limit = req.query.limit || 80
-  const offset = req.query.offset || 0
-  // TODO: move limit and offset defaults to UI, server shouldn't need these.
+  const limit = req.query.limit
+  const offset = req.query.offset
   const rows = searchDb(q, orderBy, desc, limit, offset)
   res.json(rows)
 });
