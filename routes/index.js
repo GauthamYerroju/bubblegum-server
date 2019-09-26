@@ -52,7 +52,14 @@ router.get(['/listdir'], function (req, res, next) {
       promises.push(i)
     } else {
       i.mime = mime.lookup(i.path)
-      promises.push(getFileData(i))
+      promises.push(new Promise((resolve, reject) => {
+        getFileData(i)
+        .then(data => resolve(data))
+        .catch(err => {
+          i.error = err
+          resolve(i)
+        })
+      }))
     }
   }
   Promise.all(promises).catch(res.json).then(values => {
