@@ -62,9 +62,9 @@ router.get('/listdir', function (req, res, next) {
       }))
     }
   }
-  Promise.all(promises).catch(res.json).then(values => {
-    return res.json(values)
-  })
+  Promise.all(promises)
+    .then(res.json)
+    .catch(res.json)
 });
 
 router.get('/search', function (req, res, next) {
@@ -73,8 +73,9 @@ router.get('/search', function (req, res, next) {
   const desc = !(req.query.sortAsc === 'true')
   const limit = req.query.limit
   const offset = req.query.offset
-  const rows = searchDb(q, orderBy, desc, limit, offset)
-  res.json(rows)
+  searchDb(q, orderBy, desc, limit, offset)
+    .then(res.json)
+    .catch(res.json)
 });
 
 router.get('/scan', function (req, res, next) {
