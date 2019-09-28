@@ -50,21 +50,31 @@ router.get('/listdir', function (req, res, next) {
   for (const i of iterDir(path.resolve(argv.home, req.query.path || ''), recurse=false)) {
     if (i.dir) {
       promises.push(i)
-    } else {
-      i.mime = mime.lookup(i.path)
-      promises.push(new Promise((resolve, reject) => {
-        getFileData(i)
+      continue
+    }
+    i.mime = mime.lookup(i.path)
+    if (i.error) {
+      promises.push(i)
+      continue
+    }
+    promises.push(new Promise((resolve, reject) => {
+      getFileData(i)
         .then(data => resolve(data))
         .catch(err => {
           i.error = err
           resolve(i)
         })
-      }))
-    }
+    }))
   }
   Promise.all(promises)
-    .then(res.json)
-    .catch(res.json)
+    .then(items => {
+      // just using res.json causes an unhandled promise rejection error. Don;t know why.
+      res.json(items)
+    })
+    .catch(err => {
+      // just using res.json causes an unhandled promise rejection error. Don;t know why.
+      res.json(err)
+    })
 });
 
 router.get('/search', function (req, res, next) {
