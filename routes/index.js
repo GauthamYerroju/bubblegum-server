@@ -3,7 +3,7 @@ var process = require('process')
 var express = require('express');
 var router = express.Router();
 var mime = require('mime-types')
-var { iterDir, getFileData, searchDb } = require("bubblegum-core")
+var { iterDir, getFileData, getFileDataBatch, searchDb } = require("bubblegum-core")
 
 // TODO: why do I need config/default.json? Figure it out.
 // TODO: define settings in bubblegum-core, expose it in bubblegum-server and bubblegum-gallery
@@ -46,33 +46,18 @@ router.get('/get-thumbnail', function(req, res, next) {
 });
 
 router.get('/listdir', function (req, res, next) {
-  var promises = []
-  for (const i of iterDir(path.resolve(argv.home, req.query.path || ''), recurse=false)) {
-    if (i.dir) {
-      promises.push(i)
-      continue
-    }
+  const homePath = path.resolve(argv.home, req.query.path || '')
+  const items = []
+  for(const i of iterDir(homePath, recurse=false)) {
     i.mime = mime.lookup(i.path)
-    if (i.error) {
-      promises.push(i)
-      continue
-    }
-    promises.push(new Promise((resolve, reject) => {
-      getFileData(i)
-        .then(data => resolve(data))
-        .catch(err => {
-          i.error = err
-          resolve(i)
-        })
-    }))
+    items.push(i)
   }
-  Promise.all(promises)
-    .then(items => {
-      // just using res.json causes an unhandled promise rejection error. Don;t know why.
-      res.json(items)
+  getFileDataBatch(items)
+    .then(result => {
+      res.json(result)
     })
     .catch(err => {
-      // just using res.json causes an unhandled promise rejection error. Don;t know why.
+      console.error(err)
       res.json(err)
     })
 });
@@ -81,30 +66,45 @@ router.get('/search', function (req, res, next) {
   const q = req.query.q || ''
   const orderBy = req.query.sortBy || 'name'
   const desc = !(req.query.sortAsc === 'true')
-  const limit = req.query.limit
-  const offset = req.query.offset
+  const limit = req.query.limit || 80 // TODO: remove default here after pagination is implemented in ui
+  const offset = req.query.offset || 0
   searchDb(q, orderBy, desc, limit, offset)
-    .then(res.json)
-    .catch(res.json)
+    .then(result => {
+      res.json(result)
+    })
+    .catch(err => {
+      console.error(err)
+      res.json(err)
+    })
 });
 
 router.get('/scan', function (req, res, next) {
-  var promises = []
-  for (const i of iterDir(path.resolve(argv.home), recurse=true)) {
-    if (i.dir) continue;
-    promises.push(new Promise((resolve, reject) => {
-      getFileData(i, true)
-      .then(data => {
-        resolve(data)
-      })
-      .catch(err => {
-        resolve(err)
-      })
-    }))
+  const batchSize = req.query.batchSize || 10 // TODO: move scan batch size to config in UI
+  const fillBatch = (iterator) => {
+    const batch = []
+    for(let i = 0; i < batchSize; i++) {
+      let item = iterator.next()
+      if (item.done) break;
+      batch.push(item.value)
+    }
+    return batch
   }
-  Promise.all(promises).catch(err => res.status(500).json(err)).then(values => {
-    return res.json({message: `Indexed ${values.length} item(s).`})
-  })
+  const recursivePromise = (iterator) => {
+    const batch = fillBatch(iterator)
+    return getFileDataBatch(batch, true)
+      .catch(err => {
+        console.error(err)
+        res.status(500).json(err)
+      })
+      .then((result) => {
+        if (batch.length) {
+          return recursivePromise(iterator)
+        } else {
+          return res.json({message: `Indexing succesful.`})
+        }
+      })
+  }
+  recursivePromise(iterDir(path.resolve(argv.home), recurse=true))
 });
 
 module.exports = router;
