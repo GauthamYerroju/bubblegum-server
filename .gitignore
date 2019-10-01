@@ -64,3 +64,4 @@ typings/
 *.db
 *.db-shm
 *.db-wal
+thumbnails
