@@ -4,8 +4,9 @@
         "recurse": false,
         "thumbnailDir": "thumbnails"
     },
-    "image": {
-        "shrinkOnly": true
+    "thumbnail": {
+        "dir": "thumbnails",
+        "size": 400
     },
     "statKeys": {
         "size": "size",
