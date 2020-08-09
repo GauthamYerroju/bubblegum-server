@@ -7,14 +7,14 @@
   },
   "dependencies": {
     "bubblegum-core": "file:../bubblegum-core",
-    "cookie-parser": "~1.4.4",
+    "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
-    "debug": "~2.6.9",
-    "express": "~4.16.1",
-    "helmet": "^3.21.0",
-    "http-errors": "~1.6.3",
-    "mime-types": "^2.1.24",
-    "morgan": "~1.9.1",
-    "pug": "^2.0.4"
+    "debug": "~4.1.1",
+    "express": "~4.17.1",
+    "helmet": "^4.0.0",
+    "http-errors": "~1.8.0",
+    "mime-types": "^2.1.27",
+    "morgan": "~1.10.0",
+    "pug": "^3.0.0"
   }
 }
