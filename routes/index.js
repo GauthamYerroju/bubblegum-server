@@ -15,32 +15,30 @@ var argSpec = {
     default: process.cwd()
   },
   2: {
-    name: 'thumbs'
+    name: 'thumbs',
+    default: path.resolve(process.cwd(), 'thumbnails')
   }
 }
 var argv = {}
-for(var [i, arg] of process.argv.slice(2).entries()) {
+for (var [i, arg] of process.argv.slice(2).entries()) {
   var spec = argSpec[i + 1]
   if (spec) {
     argv[spec.name] = arg || spec.default
   }
 }
-if (argv.home && !argv.thumbs) {
-  argv.thumbs = argv.home
-}
 console.table(argv)
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
+router.get('/', function (req, res, next) {
   res.render('index', { title: 'Express' });
 });
 
-router.get('/get-file', function(req, res, next) {
+router.get('/get-file', function (req, res, next) {
   var p = path.resolve(argv.home, req.query.path)
   return res.sendFile(p)
 });
 
-router.get('/get-thumbnail', function(req, res, next) {
+router.get('/get-thumbnail', function (req, res, next) {
   var p = path.resolve(argv.thumbs, req.query.path)
   return res.sendFile(p)
 });
@@ -48,7 +46,7 @@ router.get('/get-thumbnail', function(req, res, next) {
 router.get('/listdir', function (req, res, next) {
   const homePath = path.resolve(argv.home, req.query.path || '')
   const items = []
-  for(const i of iterDir(homePath, recurse=false)) {
+  for (const i of iterDir(homePath, recurse = false)) {
     i.mime = mime.lookup(i.path)
     items.push(i)
   }
@@ -82,7 +80,7 @@ router.get('/scan', function (req, res, next) {
   const batchSize = req.query.batchSize || 10 // TODO: move scan batch size to config in UI
   const fillBatch = (iterator) => {
     const batch = []
-    for(let i = 0; i < batchSize; i++) {
+    for (let i = 0; i < batchSize; i++) {
       let item = iterator.next()
       if (item.done) break;
       batch.push(item.value)
@@ -100,11 +98,11 @@ router.get('/scan', function (req, res, next) {
         if (batch.length) {
           return recursivePromise(iterator)
         } else {
-          return res.json({message: `Indexing succesful.`})
+          return res.json({ message: `Indexing succesful.` })
         }
       })
   }
-  recursivePromise(iterDir(path.resolve(argv.home), recurse=true))
+  recursivePromise(iterDir(path.resolve(argv.home), recurse = true))
 });
 
 module.exports = router;
